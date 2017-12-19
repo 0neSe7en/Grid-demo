@@ -19,8 +19,8 @@ class Panel {
         this.ctx = this.canvas.getContext('2d');
         this.bgCanvas = document.createElement('canvas');
         this.bgCtx = this.bgCanvas.getContext('2d');
-        this.gap = 10;
-        this.rectWidth = 15;
+        this.gap = 5;
+        this.rectWidth = 5;
         this.canvas.width = 801;
         this.canvas.height = 801;
         this.bgCanvas.width = 801;
@@ -87,7 +87,7 @@ class Panel {
         const rightIndex = Math.floor(rect.right / (this.gap + this.rectWidth));
         const topIndex = Math.floor(rect.top / (this.gap + this.rectWidth));
         const bottomIndex = Math.floor(rect.bottom / (this.gap + this.rectWidth));
-        if (this.isNullSelection(leftIndex, rightIndex, rect.left, rect.left)
+        if (this.isNullSelection(leftIndex, rightIndex, rect.left, rect.right)
             || this.isNullSelection(topIndex, bottomIndex, rect.top, rect.bottom)
         ) {
             return null
