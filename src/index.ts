@@ -11,12 +11,16 @@ class Panel {
     private isDrawing: boolean;
     private selectionFrameStart: Point;
     private cubesMatrix: Rect[][];
+    private gap: number;
+    private rectWidth: number;
 
     constructor() {
         this.canvas = document.querySelector('canvas');
         this.ctx = this.canvas.getContext('2d');
         this.bgCanvas = document.createElement('canvas');
         this.bgCtx = this.bgCanvas.getContext('2d');
+        this.gap = 10;
+        this.rectWidth = 15;
         this.canvas.width = 801;
         this.canvas.height = 801;
         this.bgCanvas.width = 801;
@@ -67,19 +71,46 @@ class Panel {
         rect.drawRectFrame(this.ctx, line);
     }
 
+    private isNullSelection(startIndex: number, endIndex: number, startPixel: number, endPixel: number) {
+        if (startIndex === endIndex) {
+            return this.isInGap(startPixel) && this.isInGap(endPixel);
+        }
+        return false;
+    }
+
+    private isInGap(pixel: number) {
+        return pixel % (this.gap + this.rectWidth) > this.rectWidth;
+    }
+
+    private findSelection(rect: Rect): Rect | null {
+        const leftIndex = Math.floor(rect.left / (this.gap + this.rectWidth));
+        const rightIndex = Math.floor(rect.right / (this.gap + this.rectWidth));
+        const topIndex = Math.floor(rect.top / (this.gap + this.rectWidth));
+        const bottomIndex = Math.floor(rect.bottom / (this.gap + this.rectWidth));
+        if (this.isNullSelection(leftIndex, rightIndex, rect.left, rect.left)
+            || this.isNullSelection(topIndex, bottomIndex, rect.top, rect.bottom)
+        ) {
+            return null
+        }
+        const start = new Point(
+            this.isInGap(rect.left) ? leftIndex + 1 : leftIndex,
+            this.isInGap(rect.top) ? topIndex + 1 : topIndex,
+        );
+        const end = new Point(rightIndex, bottomIndex);
+        return new Rect({start, end});
+    }
+
     public drawSelection(ctx: CanvasRenderingContext2D, start: Point, end: Point) {
         const rectSelection = new Rect({ start, end });
-
-        for (let i = 0, iLeng = this.cubesMatrix.length; i < iLeng; i++) {
-            for (let j = 0, jLeng = this.cubesMatrix[i].length; j < jLeng; j++) {
-                const curRect = this.cubesMatrix[i][j];
-
-                if (rectSelection.isRectCrossed(curRect)) {
-                    curRect.activate();
-                    curRect.fillRect(this.ctx);
-                } else {
-                    curRect.deactivate();
-                }
+        const selectedIndex = this.findSelection(rectSelection);
+        if (!selectedIndex) {
+            return;
+        }
+        for (let x = selectedIndex.left; x <= selectedIndex.right; x ++) {
+            for (let y = selectedIndex.top; y <= selectedIndex.bottom; y++) {
+                const curRect = this.cubesMatrix[y][x];
+                curRect.activate();
+                curRect.fillRect(this.ctx);
             }
         }
     }
@@ -100,10 +131,8 @@ class Panel {
 
         for (let i = 0; i < 200; i++) {
             for (let j = 0; j < 200; j++) {
-                const length = 10;
-                const gap = 5;
-                const start = new Point(j * (length + gap), i * (length + gap));
-                const end = new Point(j * (length + gap) + length, i * (length + gap) + length);
+                const start = new Point(j * (this.rectWidth + this.gap), i * (this.rectWidth + this.gap));
+                const end = new Point(j * (this.rectWidth + this.gap) + this.rectWidth, i * (this.rectWidth + this.gap) + this.rectWidth);
                 const rect = new Rect({ start, end });
 
                 rect.drawRectFrame(ctx, line);
